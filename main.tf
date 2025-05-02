@@ -2,22 +2,8 @@ module network {
     source = "./modules/network"
 }
 
-locals {
-    app_servers = [
-        { name = "app_server-1", instance_type = "t3.micro", ebs_size = 1 },
-        { name = "app_server-2", instance_type = "t3.micro", ebs_size = 1 }
-    ]
-}
-
-locals {
-    db_serevrs = [
-        { name = "db_server-1", instance_type = "t3.micro", ebs_size = 1 },
-        { name = "db_server-2", instance_type = "t3.micro", ebs_size = 1 }
-    ]
-}
-
 module "app_server" {
-    for_each = { for s in local.app_servers : s.name => s }
+    for_each = { for s in var.app_servers : s.name => s }
     source = "./modules/ec2"
     name = each.value.name
     instance_type = each.value.instance_type
@@ -36,7 +22,7 @@ module "app_server" {
 }
 
 module "db_servers" {
-    for_each = { for s in local.db_serevrs : s.name => s }
+    for_each = { for s in var.db_serevrs : s.name => s }
     source = "./modules/ec2"
     name = each.value.name
     instance_type = each.value.instance_type
@@ -50,4 +36,9 @@ module "db_servers" {
         useradd dbuser1
         useradd dbuser2
     EOF
+}
+
+resource "aws_key_pair" "my_key" {
+  key_name   = "my-ssh-key"
+  public_key = file("~/.ssh/id_rsa.pub")  
 }
